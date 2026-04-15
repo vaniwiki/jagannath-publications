@@ -1,0 +1,82 @@
+---
+interface Props {
+  slug: string;
+  title: string;
+  language: string;
+  coverFront: string;
+  price?: number;
+  currency?: string;
+}
+
+const { slug, title, language, coverFront, price, currency = 'INR' } = Astro.props;
+
+const priceDisplay = price
+  ? currency === 'INR' ? `₹${price}` : `${price} ${currency}`
+  : '';
+
+const safeTitle = title.replace(/'/g, "\\'");
+---
+
+<div class="book-card" style="display:flex;flex-direction:column;height:100%">
+  <!-- Cover — hover only affects the image inside -->
+  <a href={`/books/${slug}/`} class="book-cover-link">
+    <img
+      src={coverFront}
+      alt={title}
+      class="book-cover-img"
+      loading="lazy"
+    />
+  </a>
+  <!-- Info — static, grows to push button down -->
+  <a href={`/books/${slug}/`} class="block flex-1">
+    <h3 class="font-display text-sm sm:text-base font-bold text-[var(--text-secondary)] leading-snug hover:text-[var(--accent)] transition-colors">
+      {title}
+    </h3>
+    <div class="flex items-center gap-2 mt-1">
+      <span class="font-sans text-xs text-[var(--text-muted)]">{language}</span>
+      {priceDisplay && (
+        <span class="font-sans text-xs text-[var(--accent)] font-medium">{priceDisplay}</span>
+      )}
+    </div>
+  </a>
+  <!-- Button pinned to bottom -->
+  <button
+    data-cart-btn={slug}
+    onclick={`cartAdd('${slug}', '${safeTitle}', '${language}'); updateCartButtons();`}
+    class="mt-2 w-full py-2 rounded-lg font-sans text-xs font-medium border transition-all border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+  >
+    + Add to List
+  </button>
+</div>
+
+<style>
+  .book-cover-link {
+    display: block;
+    position: relative;
+    aspect-ratio: 2/3;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    margin-bottom: 0.75rem;
+    background: var(--bg-secondary);
+  }
+  .book-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .book-cover-link:hover .book-cover-img {
+    transform: scale(1.05);
+  }
+  .book-cover-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    transition: background 0.3s;
+  }
+  .book-cover-link:hover::after {
+    background: rgba(0,0,0,0.08);
+  }
+</style>

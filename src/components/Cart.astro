@@ -1,0 +1,192 @@
+---
+// Cart drawer with quantity support
+---
+
+<!-- Overlay -->
+<div id="cart-overlay" class="cart-overlay fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-40" onclick="toggleCart()"></div>
+
+<!-- Drawer -->
+<aside id="cart-drawer" class="cart-drawer fixed top-0 right-0 h-full w-full sm:w-[400px] bg-[var(--bg-card)] z-50 shadow-2xl flex flex-col">
+  <div class="flex items-center justify-between px-6 py-5 border-b border-[var(--border)]">
+    <h2 class="font-display text-xl font-bold text-[var(--text-secondary)]">Your Selection</h2>
+    <button onclick="toggleCart()" class="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition" aria-label="Close">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div id="cart-items" class="flex-1 overflow-y-auto px-6 py-5"></div>
+  <div id="cart-footer" class="px-6 py-5 border-t border-[var(--border)] hidden">
+    <div class="flex justify-between items-center mb-4 font-sans text-sm">
+      <span class="text-[var(--text-muted)]">Total books:</span>
+      <span id="cart-total" class="font-semibold text-[var(--text-primary)]">0</span>
+    </div>
+    <button
+      onclick="cartCheckout()"
+      class="w-full flex items-center justify-center gap-2.5 py-3.5 bg-maroon-500 dark:bg-saffron-400 text-parchment-100 dark:text-maroon-800 rounded-lg font-sans font-semibold text-sm hover:opacity-90 transition shadow-lg"
+    >
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Order via WhatsApp
+    </button>
+    <button onclick="cartClear()" class="w-full mt-2 py-2 font-sans text-sm text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition">
+      Clear All
+    </button>
+  </div>
+</aside>
+
+<script is:inline>
+  const WHATSAPP = '917903291954';
+  const CART_VERSION = 2;
+
+  // Cart items: [{ slug, title, language, qty }]
+  let cartItems = [];
+  try {
+    const stored = JSON.parse(localStorage.getItem('jp-cart') || '[]');
+    const ver = localStorage.getItem('jp-cart-v');
+    if (ver === String(CART_VERSION) && Array.isArray(stored) && stored.every(i => i.slug)) {
+      // Migrate old items without qty
+      cartItems = stored.map(i => ({ ...i, qty: i.qty || 1 }));
+    } else {
+      localStorage.removeItem('jp-cart');
+      localStorage.setItem('jp-cart-v', String(CART_VERSION));
+    }
+  } catch { localStorage.removeItem('jp-cart'); }
+
+  function toggleCart() {
+    document.getElementById('cart-drawer').classList.toggle('open');
+    document.getElementById('cart-overlay').classList.toggle('open');
+  }
+  window.toggleCart = toggleCart;
+
+  function cartAdd(slug, title, language) {
+    const existing = cartItems.find(i => i.slug === slug);
+    if (existing) {
+      existing.qty++;
+    } else {
+      cartItems.push({ slug, title, language, qty: 1 });
+    }
+    cartSave();
+  }
+  window.cartAdd = cartAdd;
+
+  function cartSetQty(slug, qty) {
+    const item = cartItems.find(i => i.slug === slug);
+    if (!item) return;
+    if (qty <= 0) {
+      cartRemove(slug);
+    } else {
+      item.qty = qty;
+      cartSave();
+    }
+  }
+  window.cartSetQty = cartSetQty;
+
+  function cartRemove(slug) {
+    cartItems = cartItems.filter(i => i.slug !== slug);
+    cartSave();
+  }
+  window.cartRemove = cartRemove;
+
+  function cartClear() {
+    cartItems = [];
+    cartSave();
+  }
+  window.cartClear = cartClear;
+
+  function cartSave() {
+    localStorage.setItem('jp-cart', JSON.stringify(cartItems));
+    localStorage.setItem('jp-cart-v', String(CART_VERSION));
+    cartRender();
+  }
+
+  function cartTotalQty() {
+    return cartItems.reduce((sum, i) => sum + i.qty, 0);
+  }
+
+  function cartCheckout() {
+    if (!cartItems.length) return;
+    let msg = "Hare Krishna! I'd like to order:\n\n";
+    cartItems.forEach((item, i) => {
+      msg += `${i + 1}. ${item.title} (${item.language}) × ${item.qty}\n`;
+    });
+    msg += `\nTotal: ${cartTotalQty()} book(s)\n\nPlease let me know availability and pricing. Thank you!`;
+    window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+  window.cartCheckout = cartCheckout;
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function cartRender() {
+    const badge = document.getElementById('cart-badge');
+    const container = document.getElementById('cart-items');
+    const footer = document.getElementById('cart-footer');
+    const total = cartTotalQty();
+
+    if (badge) {
+      badge.textContent = total;
+      badge.classList.toggle('hidden', total === 0);
+    }
+
+    if (!container) return;
+
+    if (cartItems.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full opacity-40">
+          <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+          </svg>
+          <p class="font-body text-sm">Your selection is empty</p>
+          <p class="text-xs mt-1">Browse the library to add books</p>
+        </div>`;
+      footer?.classList.add('hidden');
+    } else {
+      container.innerHTML = cartItems.map(item => `
+        <div class="flex items-center gap-3 py-4 border-b border-[var(--border)] last:border-0">
+          <div class="flex-1 min-w-0">
+            <p class="font-body text-sm font-medium text-[var(--text-secondary)] truncate">${esc(item.title)}</p>
+            <p class="font-sans text-xs text-[var(--text-subtle)] mt-0.5">${esc(item.language)}</p>
+          </div>
+          <!-- Quantity controls -->
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="cartSetQty('${item.slug}', ${item.qty - 1})" class="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition text-sm font-medium">−</button>
+            <span class="w-7 text-center font-sans text-sm font-semibold text-[var(--text-primary)]">${item.qty}</span>
+            <button onclick="cartSetQty('${item.slug}', ${item.qty + 1})" class="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition text-sm font-medium">+</button>
+          </div>
+          <!-- Remove -->
+          <button onclick="cartRemove('${item.slug}')" class="p-1 text-[var(--text-subtle)] hover:text-red-500 transition shrink-0" aria-label="Remove">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+          </button>
+        </div>`).join('');
+      footer?.classList.remove('hidden');
+      const totalEl = document.getElementById('cart-total');
+      if (totalEl) totalEl.textContent = total;
+    }
+  }
+
+  // Update all add-to-cart buttons on the page to reflect cart state
+  function updateCartButtons() {
+    document.querySelectorAll('[data-cart-btn]').forEach(btn => {
+      const slug = btn.getAttribute('data-cart-btn');
+      const item = cartItems.find(i => i.slug === slug);
+      if (item) {
+        btn.textContent = `In List (${item.qty})`;
+        btn.className = 'mt-2 w-full py-2 rounded-lg font-sans text-xs font-semibold border transition-all bg-maroon-500 dark:bg-saffron-400 text-parchment-100 dark:text-maroon-800 border-transparent';
+      } else {
+        btn.textContent = '+ Add to List';
+        btn.className = 'mt-2 w-full py-2 rounded-lg font-sans text-xs font-medium border transition-all border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]';
+      }
+    });
+  }
+  window.updateCartButtons = updateCartButtons;
+
+  // Also update buttons whenever cart renders
+  const origCartRender = cartRender;
+  cartRender = function() {
+    origCartRender();
+    updateCartButtons();
+  };
+
+  cartRender();
+</script>

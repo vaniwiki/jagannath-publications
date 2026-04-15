@@ -1,0 +1,99 @@
+# Sveltia CMS Configuration
+# Uses GitHub PKCE OAuth — no server-side proxy needed
+
+backend:
+  name: github
+  repo: vaniwiki/jagannath-publications
+  branch: main
+
+media_folder: "public/images/books"
+public_folder: "/images/books"
+
+collections:
+  - name: "books"
+    label: "Books"
+    label_singular: "Book"
+    folder: "src/content/books"
+    create: true
+    slug: "{{slug}}"
+    sortable_fields: ["title", "language", "order"]
+    summary: "{{title}} ({{language}})"
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+
+      - label: "Subtitle"
+        name: "subtitle"
+        widget: "string"
+        required: false
+
+      - label: "Language"
+        name: "language"
+        widget: "select"
+        options:
+          - "English"
+          - "Hindi"
+          - "Bengali"
+          - "Russian"
+          - "Marathi"
+          - "Odia"
+
+      - label: "Publisher"
+        name: "publisher"
+        widget: "select"
+        options:
+          - "Gopal Jiu Publications"
+          - "Tattva Vichar Publications"
+        required: false
+
+      - label: "Price (INR)"
+        name: "price"
+        widget: "number"
+        value_type: "int"
+        required: false
+
+      - label: "Currency"
+        name: "currency"
+        widget: "string"
+        default: "INR"
+        required: false
+
+      - label: "Front Cover"
+        name: "coverFront"
+        widget: "image"
+
+      - label: "Back Cover"
+        name: "coverBack"
+        widget: "image"
+        required: false
+
+      - label: "Index / Contents Pages"
+        name: "indexPages"
+        widget: "list"
+        required: false
+        field:
+          label: "Image"
+          name: "image"
+          widget: "image"
+
+      - label: "Available"
+        name: "available"
+        widget: "boolean"
+        default: true
+
+      - label: "Featured"
+        name: "featured"
+        widget: "boolean"
+        default: false
+
+      - label: "Sort Order"
+        name: "order"
+        widget: "number"
+        value_type: "int"
+        default: 100
+
+      - label: "Description"
+        name: "body"
+        widget: "markdown"
+        required: false

@@ -1,0 +1,168 @@
+---
+import PeacockLogo from './PeacockLogo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { getCollection } from 'astro:content';
+
+const allBooks = await getCollection('books');
+const searchIndex = allBooks.map(b => ({ title: b.data.title, slug: b.slug, lang: b.data.language }));
+---
+
+<nav
+  class="fixed top-0 w-full z-50 transition-all duration-300 backdrop-blur-md border-b border-[var(--border)]"
+  id="navbar"
+  style="background: color-mix(in srgb, var(--bg-primary) 85%, transparent);"
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-8">
+    <div class="flex items-center justify-between py-3 sm:py-4">
+      <!-- Logo -->
+      <a href="/" class="flex items-center gap-2.5 group shrink-0">
+        <PeacockLogo size={36} class="transition-transform group-hover:scale-110" />
+        <div class="leading-tight">
+          <span class="font-display text-lg sm:text-xl font-bold text-[var(--text-secondary)] block" style="letter-spacing:0.04em">
+            Jagannath
+          </span>
+          <span class="font-sans text-[9.5px] sm:text-[10.5px] font-bold uppercase text-[var(--text-muted)] block" style="letter-spacing:0.32em">
+            Publications
+          </span>
+        </div>
+      </a>
+
+      <!-- Center: Search bar -->
+      <div class="hidden sm:flex flex-1 max-w-xs mx-6 lg:mx-12">
+        <div class="relative w-full">
+          <input
+            type="text"
+            placeholder="search.."
+            id="nav-search"
+            autocomplete="off"
+            class="w-full pl-4 pr-10 py-2 rounded-full border border-[var(--border-strong)] bg-[var(--bg-card)] text-sm font-sans text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition"
+          />
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <div id="nav-search-results" class="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Right side icons -->
+      <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+        <ThemeToggle />
+
+        <!-- Cart -->
+        <button
+          onclick="toggleCart()"
+          class="relative p-2 text-[var(--text-primary)] hover:text-[var(--accent)] transition"
+          aria-label="Open cart"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.25 20.25a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM15.75 20.25a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/>
+            <path fill-rule="evenodd" d="M2.25 3.75a.75.75 0 0 1 .75-.75h.803a1.5 1.5 0 0 1 1.477 1.242l.29 1.758h13.68a.75.75 0 0 1 .728.932l-1.5 6a.75.75 0 0 1-.728.568H7.5a.75.75 0 0 1-.728-.568L5.06 5.25H3a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd"/>
+          </svg>
+          <span
+            id="cart-badge"
+            class="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-bold bg-red-500 text-white rounded-full px-1 hidden"
+          >0</span>
+        </button>
+
+        <!-- Hamburger menu -->
+        <button
+          class="p-2 text-[var(--text-primary)] hover:text-[var(--accent)] transition"
+          onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+          aria-label="Menu"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dropdown menu -->
+    <div id="mobile-menu" class="hidden pb-4 border-t border-[var(--border)]">
+      <!-- Mobile search -->
+      <div class="sm:hidden pt-3 pb-2">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="search.."
+            class="w-full pl-4 pr-10 py-2 rounded-full border border-[var(--border-strong)] bg-[var(--bg-card)] text-sm font-sans text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition"
+          />
+          <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </div>
+      </div>
+      <div class="flex flex-col gap-3 pt-2 font-sans text-sm text-[var(--text-muted)]">
+        <a href="/books/" class="hover:text-[var(--text-secondary)] transition py-1">Books</a>
+        <a href="/#about" class="hover:text-[var(--text-secondary)] transition py-1">About</a>
+        <a href="/#library" class="hover:text-[var(--text-secondary)] transition py-1">Featured</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script is:inline define:vars={{ searchIndex }}>
+  // Navbar shadow on scroll
+  var nav = document.getElementById('navbar');
+  window.addEventListener('scroll', function() {
+    nav.style.boxShadow = window.scrollY > 20 ? '0 1px 8px var(--shadow)' : 'none';
+  });
+
+  // Autocomplete search
+  function setupSearch(inputId, resultsId) {
+    var input = document.getElementById(inputId);
+    var results = document.getElementById(resultsId);
+    if (!input || !results) return;
+
+    input.addEventListener('input', function() {
+      var q = this.value.toLowerCase().trim();
+      if (q.length < 2) { results.style.display = 'none'; return; }
+
+      var matches = searchIndex
+        .map(function(b) {
+          var t = b.title.toLowerCase();
+          var s = 0;
+          if (t === q) s = 100;
+          else if (t.startsWith(q)) s = 80;
+          else if (t.includes(q)) s = 60;
+          else {
+            var words = q.split(/\s+/);
+            if (words.every(function(w) { return t.includes(w); })) s = 40;
+          }
+          return { title: b.title, slug: b.slug, lang: b.lang, s: s };
+        })
+        .filter(function(r) { return r.s > 0; })
+        .sort(function(a, b) { return b.s - a.s; })
+        .slice(0, 6);
+
+      if (!matches.length) {
+        results.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--text-muted)">No books found</div>';
+        results.style.display = 'block';
+        return;
+      }
+
+      results.innerHTML = matches.map(function(r) {
+        return '<a href="/books/' + r.slug + '/" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;text-decoration:none;color:var(--text-primary);transition:background .1s;font-size:14px" onmouseenter="this.style.background=\'var(--bg-secondary)\'" onmouseleave="this.style.background=\'transparent\'">' +
+          '<span style="font-weight:600">' + r.title + '</span>' +
+          '<span style="font-size:11px;color:var(--text-muted)">' + r.lang + '</span>' +
+        '</a>';
+      }).join('');
+      results.style.display = 'block';
+    });
+  }
+
+  setupSearch('nav-search', 'nav-search-results');
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#nav-search') && !e.target.closest('#nav-search-results')) {
+      var r = document.getElementById('nav-search-results');
+      if (r) r.style.display = 'none';
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var r = document.getElementById('nav-search-results');
+      if (r) r.style.display = 'none';
+    }
+  });
+</script>
