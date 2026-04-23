@@ -25,7 +25,14 @@ const priceDisplay = price
 const whatsappMsg = `Hare Krishna! I'd like to order:\n\n${title}${subtitle ? ' — ' + subtitle : ''} (${language})\n\nPlease let me know availability and pricing. Thank you!`;
 const whatsappUrl = `https://wa.me/917903291954?text=${encodeURIComponent(whatsappMsg)}`;
 
-const safeTitle = title.replace(/'/g, "\\'");
+// Build the list of images for this book, in order.
+const images: { src: string; alt: string; kind: string }[] = [
+  { src: coverFront, alt: `${title} — Front Cover`, kind: 'front' },
+];
+if (coverBack)  images.push({ src: coverBack, alt: `${title} — Back Cover`, kind: 'back' });
+if (indexPages) indexPages.forEach((p, i) => images.push({ src: p, alt: `${title} — Contents ${i + 1}`, kind: 'index' }));
+
+const showControls = images.length > 1;
 ---
 
 <Base title={title} description={`${title} by Srila Gour Govinda Swami Maharaja. ${language} edition.`}>
@@ -39,34 +46,64 @@ const safeTitle = title.replace(/'/g, "\\'");
       </a>
 
       <div class="grid md:grid-cols-[1fr_1.2fr] gap-10 lg:gap-16">
-        <!-- Left: Cover images slider -->
-        <div class="book-images">
-          <div class="book-images-scroll">
-            <div class="book-slide">
-              <div class="rounded-2xl overflow-hidden shadow-xl bg-[var(--bg-secondary)]">
-                <SmartImage src={coverFront} alt={`${title} — Front Cover`} class="w-full" loading="eager" fetchpriority="high" />
-              </div>
+        <!-- Left: Cover images carousel -->
+        <div class="jp-slider" data-jp-slider>
+          <div class="jp-slider__viewport">
+            <div class="jp-slider__track" data-jp-slider-track tabindex="0">
+              {images.map((img, i) => (
+                <div class="jp-slider__slide">
+                  <div class="book-frame">
+                    <SmartImage
+                      src={img.src}
+                      alt={img.alt}
+                      class="book-frame__img"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      {...(i === 0 ? { fetchpriority: 'high' } : {})}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {coverBack && (
-              <div class="book-slide">
-                <div class="rounded-2xl overflow-hidden shadow-lg bg-[var(--bg-secondary)]">
-                  <SmartImage src={coverBack} alt={`${title} — Back Cover`} class="w-full" loading="lazy" />
-                </div>
-              </div>
+            {showControls && (
+              <>
+                <button
+                  class="jp-slider__arrow jp-slider__arrow--prev"
+                  data-jp-slider-prev
+                  aria-label="Previous image"
+                  type="button"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <button
+                  class="jp-slider__arrow jp-slider__arrow--next"
+                  data-jp-slider-next
+                  aria-label="Next image"
+                  type="button"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </>
             )}
-
-            {indexPages && indexPages.length > 0 && indexPages.map((page, i) => (
-              <div class="book-slide">
-                <div class="rounded-xl overflow-hidden shadow-md bg-[var(--bg-secondary)]">
-                  <SmartImage src={page} alt={`${title} — Contents ${i + 1}`} class="w-full" loading="lazy" />
-                </div>
-              </div>
-            ))}
           </div>
 
-          <!-- Slide dots -->
-          <div class="slide-dots mt-4" id="slide-dots"></div>
+          {showControls && (
+            <div class="jp-slider__pills" data-jp-slider-pills role="tablist" aria-label="Book image navigation">
+              {images.map((_, i) => (
+                <button
+                  type="button"
+                  class={`jp-slider__pill${i === 0 ? ' is-active' : ''}`}
+                  data-jp-slider-pill={i}
+                  role="tab"
+                  aria-label={`Go to image ${i + 1}`}
+                ></button>
+              ))}
+            </div>
+          )}
         </div>
 
         <!-- Right: Book info -->
@@ -124,10 +161,10 @@ const safeTitle = title.replace(/'/g, "\\'");
                 data-cart-btn={book.slug}
                 data-title={title}
                 data-language={language}
-                class="add-to-bag-btn flex-1 flex items-center justify-center gap-2 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-full font-display font-semibold text-sm tracking-wide transition shadow-md"
+                class="add-to-bag-btn add-to-bag-btn--primary flex-1"
               >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M7 18a2 2 0 100 4 2 2 0 000-4zM17 18a2 2 0 100 4 2 2 0 000-4zM4 3h2.5l2 10.5h10l2-7.5H8"/></svg>
-                Add to Bag
+                <img src="/images/bag.png" alt="" class="add-to-bag-btn__icon" />
+                <span class="add-to-bag-btn__label">Add to Bag</span>
               </button>
               <a
                 href={whatsappUrl}
@@ -152,69 +189,69 @@ const safeTitle = title.replace(/'/g, "\\'");
   <Footer />
   <Cart />
 
-  <style>
-    .book-images-scroll {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .slide-dots { display: none; }
-
-    @media (max-width: 768px) {
-      .book-images { position: relative; }
-      .book-images-scroll {
-        flex-direction: row;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        gap: 12px;
-        padding-bottom: 4px;
-      }
-      .book-images-scroll::-webkit-scrollbar { display: none; }
-      .book-slide {
-        flex: 0 0 85%;
-        scroll-snap-align: center;
-      }
-      .slide-dots {
-        display: flex;
-        justify-content: center;
-        gap: 6px;
-      }
-      .slide-dot {
-        width: 24px;
-        height: 4px;
-        border-radius: 2px;
-        background: var(--border-strong);
-        transition: all 0.2s;
-      }
-      .slide-dot.active {
-        background: var(--text-primary);
-        width: 32px;
-      }
-    }
-  </style>
-
   <script is:inline>
-    (function() {
-      var scroll = document.querySelector('.book-images-scroll');
-      var dotsEl = document.getElementById('slide-dots');
-      if (!scroll || !dotsEl) return;
-      var slides = scroll.querySelectorAll('.book-slide');
-      if (slides.length < 2) return;
+    (function () {
+      function init() {
+        document.querySelectorAll('[data-jp-slider]').forEach(function (root) {
+          var track = root.querySelector('[data-jp-slider-track]');
+          var prev  = root.querySelector('[data-jp-slider-prev]');
+          var next  = root.querySelector('[data-jp-slider-next]');
+          var pills = root.querySelectorAll('[data-jp-slider-pill]');
+          if (!track) return;
 
-      slides.forEach(function(_, i) {
-        var dot = document.createElement('div');
-        dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
-        dotsEl.appendChild(dot);
-      });
-      var dots = dotsEl.querySelectorAll('.slide-dot');
+          var slides = track.querySelectorAll('.jp-slider__slide');
+          if (slides.length < 2) return;
 
-      scroll.addEventListener('scroll', function() {
-        var slideWidth = slides[0].offsetWidth + 12;
-        var idx = Math.round(scroll.scrollLeft / slideWidth);
-        dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
-      });
+          function gap() { return 16; }
+          function currentIndex() {
+            var w = slides[0].offsetWidth + gap();
+            if (w <= 0) return 0;
+            return Math.max(0, Math.min(slides.length - 1, Math.round(track.scrollLeft / w)));
+          }
+
+          function goTo(i) {
+            if (i < 0) i = 0;
+            if (i > slides.length - 1) i = slides.length - 1;
+            var w = slides[0].offsetWidth + gap();
+            track.scrollTo({ left: w * i, behavior: 'smooth' });
+          }
+
+          function updateUI() {
+            var idx = currentIndex();
+            pills.forEach(function (p, i) { p.classList.toggle('is-active', i === idx); });
+            if (prev) prev.disabled = idx <= 0;
+            if (next) next.disabled = idx >= slides.length - 1;
+          }
+
+          track.addEventListener('scroll', function () {
+            window.requestAnimationFrame(updateUI);
+          }, { passive: true });
+
+          if (prev) prev.addEventListener('click', function () { goTo(currentIndex() - 1); });
+          if (next) next.addEventListener('click', function () { goTo(currentIndex() + 1); });
+
+          pills.forEach(function (p, i) {
+            p.addEventListener('click', function () { goTo(i); });
+          });
+
+          track.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft')  { e.preventDefault(); goTo(currentIndex() - 1); }
+            if (e.key === 'ArrowRight') { e.preventDefault(); goTo(currentIndex() + 1); }
+          });
+
+          window.addEventListener('resize', function () {
+            window.requestAnimationFrame(updateUI);
+          });
+
+          updateUI();
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     })();
   </script>
 </Base>

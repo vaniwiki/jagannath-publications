@@ -6,6 +6,7 @@ import BookCard from '../../../components/BookCard.astro';
 import Cart from '../../../components/Cart.astro';
 import LanguagePills from '../../../components/LanguagePills.astro';
 import { getCollection } from 'astro:content';
+import { excludeFeatured } from '../../../lib/books';
 
 export async function getStaticPaths() {
   const languages = [
@@ -24,7 +25,7 @@ const { lang } = Astro.params;
 const { languageLabel, languageNative } = Astro.props;
 
 const allBooks = await getCollection('books');
-const books = allBooks
+const books = excludeFeatured(allBooks)
   .filter(b => b.data.language === languageLabel)
   .sort((a, b) => (a.data.order ?? 100) - (b.data.order ?? 100));
 

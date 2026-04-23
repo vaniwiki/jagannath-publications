@@ -6,9 +6,10 @@ import BookCard from '../../components/BookCard.astro';
 import Cart from '../../components/Cart.astro';
 import LanguagePills from '../../components/LanguagePills.astro';
 import { getCollection } from 'astro:content';
+import { excludeFeatured } from '../../lib/books';
 
 const allBooks = await getCollection('books');
-const books = allBooks.sort((a, b) => (a.data.order ?? 100) - (b.data.order ?? 100));
+const books = excludeFeatured(allBooks).sort((a, b) => (a.data.order ?? 100) - (b.data.order ?? 100));
 ---
 
 <Base title="All Books">
