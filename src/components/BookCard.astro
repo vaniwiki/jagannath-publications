@@ -15,67 +15,157 @@ const { slug, title, language, coverFront, price, currency = 'INR' } = Astro.pro
 const priceDisplay = price
   ? currency === 'INR' ? `₹${price}` : `${price} ${currency}`
   : '';
-
-const safeTitle = title.replace(/'/g, "\\'");
 ---
 
-<div class="book-card flex flex-col h-full">
-  <!-- Cover -->
-  <a href={`/books/${slug}/`} class="book-cover-link">
+<div class="book-card">
+  <!-- Cover area — uniform aspect ratio, transparent container like the author card -->
+  <a href={`/books/${slug}/`} class="book-card__cover" aria-label={title}>
     <SmartImage
       src={coverFront}
       alt={title}
-      class="book-cover-img"
+      class="book-card__img"
       loading="lazy"
       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
     />
   </a>
 
   <!-- Info -->
-  <a href={`/books/${slug}/`} class="block mt-3 flex-1">
-    <h3 class="font-display text-sm sm:text-base font-bold text-[var(--text-primary)] leading-snug hover:text-brand-500 transition-colors line-clamp-2">
-      {title}
-    </h3>
-    <div class="flex items-center gap-2 mt-1 font-display text-xs text-[var(--text-muted)]">
+  <a href={`/books/${slug}/`} class="book-card__info">
+    <h3 class="book-card__title">{title}</h3>
+    <div class="book-card__meta">
       <span>{language.toUpperCase()}</span>
       {priceDisplay && <span>| {priceDisplay}</span>}
     </div>
   </a>
 
-  <!-- Add to Bag button (mirrors Canva "ADD TO BAG" / "Added!" states) -->
+  <!-- Add to Bag button -->
   <button
     data-cart-btn={slug}
     data-title={title}
     data-language={language}
-    class="add-to-bag-btn mt-3 w-full py-2 rounded-full font-display text-xs font-semibold tracking-wide transition-all border-2 border-[var(--border-strong)] text-[var(--text-primary)] bg-transparent hover:border-brand-500 hover:text-brand-500"
+    class="add-to-bag-btn book-card__cta"
   >
-    ADD TO BAG
+    <img src="/images/bag.png" alt="" class="add-to-bag-btn__icon" />
+    <span class="add-to-bag-btn__label">ADD TO BAG</span>
   </button>
 </div>
 
 <style>
-  .book-cover-link {
-    display: block;
-    position: relative;
-    aspect-ratio: 2/3;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: 0 4px 14px rgba(74, 28, 21, 0.12);
-    background: var(--bg-secondary);
+  .book-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
   }
-  .book-cover-img {
+
+  /* ── Cover container — transparent like the author card ── */
+  .book-card__cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    aspect-ratio: 3 / 4;              /* uniform frame for every book */
+    border-radius: 1rem;
+    padding: 1rem;
+    background: rgba(250, 246, 238, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow:
+      0 8px 24px rgba(74, 28, 21, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .book-card__cover:hover {
+    box-shadow:
+      0 12px 32px rgba(74, 28, 21, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+  }
+
+  /* Book image — fills the frame uniformly (every book same size, cropped if needed) */
+  .book-card__img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
+    display: block;
+    border-radius: 0.5rem;
+    box-shadow: 0 6px 16px rgba(74, 28, 21, 0.18);
     transition: transform 0.5s ease;
   }
-  .book-cover-link:hover .book-cover-img {
+  .book-card__cover:hover .book-card__img {
     transform: scale(1.04);
   }
-  .line-clamp-2 {
+
+  @media (min-width: 640px) {
+    .book-card__cover { padding: 1.25rem; border-radius: 1.25rem; }
+  }
+
+  /* ── Info block ── */
+  .book-card__info {
+    display: block;
+    margin-top: 0.75rem;
+    flex: 1;
+    text-decoration: none;
+  }
+  .book-card__title {
+    font-family: 'Gatwick', Georgia, serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    transition: color 0.15s ease;
+  }
+  .book-card__info:hover .book-card__title { color: var(--brand, #a0522d); }
+  @media (min-width: 640px) {
+    .book-card__title { font-size: 1rem; }
+  }
+
+  .book-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    font-family: 'Gatwick', Georgia, serif;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* Icon sizing for compact listing-card button */
+  .book-card__cta .add-to-bag-btn__icon {
+    width: 16px;
+    height: 16px;
+  }
+  .book-card__cta {
+    margin-top: 0.75rem;
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    border-radius: 9999px;
+    font-family: 'Gatwick', Georgia, serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #2a1810;
+    background: #f5b61a;
+    border: 2px solid #2a1810;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 3px 10px rgba(245, 182, 26, 0.22);
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+  .book-card__cta:hover {
+    background: #ffc73a;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(245, 182, 26, 0.35);
   }
 </style>

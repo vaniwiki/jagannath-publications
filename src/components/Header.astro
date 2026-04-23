@@ -1,7 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
+import { excludeFeatured } from '../lib/books';
 
-const allBooks = await getCollection('books');
+const allBooks = excludeFeatured(await getCollection('books'));
 const searchIndex = allBooks
   .sort((a, b) => (a.data.order ?? 100) - (b.data.order ?? 100))
   .map((b) => ({
@@ -299,41 +300,31 @@ const searchIndex = allBooks
 
 <script is:inline define:vars={{ searchIndex }}>
   // Navbar shadow on scroll
-  // Navbar: hide on scroll down, show on scroll up; update shadow with scroll
+  // Navbar: only visible at the top of the page; hidden the moment you scroll down
+  // and stays hidden on scroll-up until you're back at the very top.
   (function () {
     var nav = document.getElementById('navbar');
     var shell = document.querySelector('.header-shell');
     if (!nav || !shell) return;
 
-    var lastY = window.scrollY;
+    var TOP_THRESHOLD = 20; // how close to the top before the header shows
     var ticking = false;
-    var DELTA = 6; // ignore tiny jitters
 
     function onScroll() {
       var currentY = window.scrollY;
 
-      // Shadow when scrolled
+      // Shadow update
       nav.style.boxShadow = currentY > 20
         ? '0 12px 36px rgba(74, 28, 21, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
         : '0 8px 32px rgba(74, 28, 21, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
 
-      if (Math.abs(currentY - lastY) < DELTA) {
-        ticking = false;
-        return;
-      }
-
-      // Always show near top
-      if (currentY <= 80) {
+      // Visibility: only shown at the very top
+      if (currentY <= TOP_THRESHOLD) {
         shell.classList.remove('header-hidden');
-      } else if (currentY > lastY) {
-        // scrolling down
-        shell.classList.add('header-hidden');
       } else {
-        // scrolling up
-        shell.classList.remove('header-hidden');
+        shell.classList.add('header-hidden');
       }
 
-      lastY = currentY;
       ticking = false;
     }
 
@@ -343,6 +334,9 @@ const searchIndex = allBooks
         ticking = true;
       }
     }, { passive: true });
+
+    // Run once on load to set correct initial state (e.g. when page loads scrolled)
+    onScroll();
   })();
 
   // Move the portal onto <body> so it escapes the nav's stacking context

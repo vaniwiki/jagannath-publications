@@ -245,21 +245,24 @@ const cartLookup = allBooks.reduce((acc, b) => {
 
   function updateCartButtons() {
     document.querySelectorAll('[data-cart-btn]').forEach(btn => {
-      // Skip the detail-page main action (it has its own active class)
       const slug = btn.getAttribute('data-cart-btn');
       const item = cartItems.find(i => i.slug === slug);
-      if (btn.classList.contains('add-to-bag-btn')) {
-        if (item) {
-          btn.textContent = `Added! (${item.qty})`;
-          btn.dataset.active = '1';
-          btn.classList.remove('border-[var(--border-strong)]', 'text-[var(--text-primary)]', 'bg-transparent');
-          btn.classList.add('bg-brand-500', 'text-white', 'border-brand-500');
-        } else if (btn.dataset.active === '1') {
-          btn.textContent = btn.dataset.defaultText || 'ADD TO BAG';
-          btn.dataset.active = '0';
-          btn.classList.remove('bg-brand-500', 'text-white', 'border-brand-500');
-          btn.classList.add('border-[var(--border-strong)]', 'text-[var(--text-primary)]', 'bg-transparent');
+      if (!btn.classList.contains('add-to-bag-btn')) return;
+
+      // Find the label span (if present) — otherwise fall back to the button itself
+      const labelEl = btn.querySelector('.add-to-bag-btn__label') || btn;
+
+      if (item) {
+        if (!btn.dataset.defaultText) {
+          btn.dataset.defaultText = labelEl.textContent.trim();
         }
+        labelEl.textContent = `Added (${item.qty})`;
+        btn.classList.add('is-added');
+        btn.dataset.active = '1';
+      } else if (btn.dataset.active === '1') {
+        labelEl.textContent = btn.dataset.defaultText || 'ADD TO BAG';
+        btn.classList.remove('is-added');
+        btn.dataset.active = '0';
       }
     });
   }

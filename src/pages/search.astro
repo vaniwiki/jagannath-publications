@@ -5,8 +5,9 @@ import Footer from '../components/Footer.astro';
 import BookCard from '../components/BookCard.astro';
 import Cart from '../components/Cart.astro';
 import { getCollection } from 'astro:content';
+import { excludeFeatured } from '../lib/books';
 
-const allBooks = await getCollection('books');
+const allBooks = excludeFeatured(await getCollection('books'));
 
 // Serialize once for client-side scoring — matches Header's searchIndex shape
 const searchIndex = allBooks
