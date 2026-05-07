@@ -6,10 +6,10 @@ interface Props {
 const { active } = Astro.props;
 
 const languages = [
-  { slug: 'english', label: 'ENGLISH' },
-  { slug: 'russian', label: 'РУССКИЙ' },
-  { slug: 'hindi', label: 'हिंदी' },
-  { slug: 'bengali', label: 'বাংলা' },
+  { slug: 'english', label: 'ENGLISH', script: 'latin' },
+  { slug: 'russian', label: 'РУССКИЙ', script: 'cyrillic' },
+  { slug: 'hindi',   label: 'हिंदी',     script: 'devanagari' },
+  { slug: 'bengali', label: 'বাংলা',    script: 'bengali' },
 ];
 ---
 
@@ -17,7 +17,11 @@ const languages = [
   {languages.map(l => (
     <a
       href={`/books/language/${l.slug}/`}
-      class:list={['lang-pill', active === l.slug ? 'is-active' : '']}
+      class:list={[
+        'lang-pill',
+        `lang-pill--${l.script}`,
+        active === l.slug ? 'is-active' : '',
+      ]}
     >
       {l.label}
     </a>
@@ -44,7 +48,7 @@ const languages = [
     border-radius: 9999px;
     font-family: 'Gatwick', Georgia, serif;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: 0.05em;
     text-decoration: none;
     white-space: nowrap;
@@ -64,6 +68,33 @@ const languages = [
   .lang-pill:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 14px rgba(74, 28, 21, 0.12);
+  }
+
+  /* Per-script font-size overrides —
+     Latin/Cyrillic: +30% | Devanagari/Bengali: +80%
+     (Indic scripts naturally render smaller at the same font-size) */
+  .lang-pill--latin {
+    font-size: 1.235rem;
+    font-weight: 450;
+  }
+  .lang-pill--cyrillic {
+    font-size: 1.235rem;
+    font-weight: 600;
+  }
+  @media (min-width: 640px) {
+    .lang-pill--latin,
+    .lang-pill--cyrillic { font-size: 1.3rem; }
+  }
+
+  .lang-pill--devanagari,
+  .lang-pill--bengali {
+    font-size: 1.71rem;
+    font-weight: 530;
+    line-height: 1;
+  }
+  @media (min-width: 640px) {
+    .lang-pill--devanagari,
+    .lang-pill--bengali { font-size: 1.8rem; }
   }
 
   /* Active — orange (#e67e22) with warm glow */
